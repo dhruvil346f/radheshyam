@@ -1,13 +1,11 @@
 <?php
 namespace Elementor;
 
-use Elementor\Core\Wp_Api;
 use Elementor\Core\Admin\Admin;
 use Elementor\Core\Common\Modules\Ajax\Module as Ajax;
 use Elementor\Core\Common\App as CommonApp;
 use Elementor\Core\Debug\Inspector;
 use Elementor\Core\Documents_Manager;
-use Elementor\Core\Experiments\Manager as Experiments_Manager;
 use Elementor\Core\Kits\Manager as Kits_Manager;
 use Elementor\Core\Editor\Editor;
 use Elementor\Core\Files\Manager as Files_Manager;
@@ -16,13 +14,10 @@ use Elementor\Core\Modules_Manager;
 use Elementor\Core\Schemes\Manager as Schemes_Manager;
 use Elementor\Core\Settings\Manager as Settings_Manager;
 use Elementor\Core\Settings\Page\Manager as Page_Settings_Manager;
-use Elementor\Core\Upgrade\Elementor_3_Re_Migrate_Globals;
 use Elementor\Modules\History\Revisions_Manager;
 use Elementor\Core\DynamicTags\Manager as Dynamic_Tags_Manager;
 use Elementor\Core\Logger\Manager as Log_Manager;
 use Elementor\Modules\System_Info\Module as System_Info_Module;
-use Elementor\Data\Manager as Data_Manager;
-use Elementor\Core\Common\Modules\DevTools\Module as Dev_Tools;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -363,7 +358,7 @@ class Plugin {
 	 *
 	 * @var Files_Manager
 	 */
-	private $posts_css_manager;
+	public $posts_css_manager;
 
 	/**
 	 * WordPress widgets manager.
@@ -423,11 +418,6 @@ class Plugin {
 	public $logger;
 
 	/**
-	 * @var Dev_Tools
-	 */
-	private $dev_tools;
-
-	/**
 	 * @var Core\Upgrade\Manager
 	 */
 	public $upgrade;
@@ -436,28 +426,6 @@ class Plugin {
 	 * @var Core\Kits\Manager
 	 */
 	public $kits_manager;
-
-	/**
-	 * @var \Core\Data\Manager
-	 */
-	public $data_manager;
-
-	public $legacy_mode;
-
-	/**
-	 * @var Core\App\App
-	 */
-	public $app;
-
-	/**
-	 * @var Wp_Api
-	 */
-	public $wp;
-
-	/**
-	 * @var Experiments_Manager
-	 */
-	public $experiments;
 
 	/**
 	 * Clone.
@@ -586,7 +554,6 @@ class Plugin {
 	 * @access private
 	 */
 	private function init_components() {
-		$this->experiments = new Experiments_Manager();
 		$this->inspector = new Inspector();
 		$this->debugger = $this->inspector;
 
@@ -603,20 +570,23 @@ class Plugin {
 		$this->files_manager = new Files_Manager();
 		$this->assets_manager = new Assets_Manager();
 		$this->icons_manager = new Icons_Manager();
+		/*
+		 * @TODO: Remove deprecated alias
+		 */
+		$this->posts_css_manager = $this->files_manager;
 		$this->settings = new Settings();
 		$this->tools = new Tools();
 		$this->editor = new Editor();
 		$this->preview = new Preview();
 		$this->frontend = new Frontend();
+		$this->templates_manager = new TemplateLibrary\Manager();
 		$this->maintenance_mode = new Maintenance_Mode();
 		$this->dynamic_tags = new Dynamic_Tags_Manager();
 		$this->modules_manager = new Modules_Manager();
-		$this->templates_manager = new TemplateLibrary\Manager();
 		$this->role_manager = new Core\RoleManager\Role_Manager();
 		$this->system_info = new System_Info_Module();
 		$this->revisions_manager = new Revisions_Manager();
 		$this->images_manager = new Images_Manager();
-		$this->wp = new Wp_Api();
 
 		User::init();
 		Api::init();
@@ -624,14 +594,11 @@ class Plugin {
 
 		$this->upgrade = new Core\Upgrade\Manager();
 
-		$this->app = new Core\App\App();
-
 		if ( is_admin() ) {
 			$this->heartbeat = new Heartbeat();
 			$this->wordpress_widgets_manager = new WordPress_Widgets_Manager();
 			$this->admin = new Admin();
 			$this->beta_testers = new Beta_Testers();
-			new Elementor_3_Re_Migrate_Globals();
 		}
 	}
 
@@ -645,36 +612,6 @@ class Plugin {
 		$this->common->init_components();
 
 		$this->ajax = $this->common->get_component( 'ajax' );
-	}
-
-	/**
-	 * Get Legacy Mode
-	 *
-	 * @since 3.0.0
-	 * @deprecated 3.1.0 Use `Plugin::$instance->experiments->is_feature_active()` instead
-	 *
-	 * @param string $mode_name Optional. Default is null
-	 *
-	 * @return bool|bool[]
-	 */
-	public function get_legacy_mode( $mode_name = null ) {
-		self::$instance->modules_manager->get_modules( 'dev-tools' )->deprecation
-			->deprecated_function( __METHOD__, '3.1.0', 'Plugin::$instance->experiments->is_feature_active()' );
-
-		$legacy_mode = [
-			'elementWrappers' => ! self::$instance->experiments->is_feature_active( 'e_dom_optimization' ),
-		];
-
-		if ( ! $mode_name ) {
-			return $legacy_mode;
-		}
-
-		if ( isset( $legacy_mode[ $mode_name ] ) ) {
-			return $legacy_mode[ $mode_name ];
-		}
-
-		// If there is no legacy mode with the given mode name;
-		return false;
 	}
 
 	/**
@@ -707,33 +644,9 @@ class Plugin {
 	 * @access private
 	 */
 	private function register_autoloader() {
-		require_once ELEMENTOR_PATH . '/includes/autoloader.php';
+		require ELEMENTOR_PATH . '/includes/autoloader.php';
 
 		Autoloader::run();
-	}
-
-	/**
-	 * Plugin Magic Getter
-	 *
-	 * @since 3.1.0
-	 * @access public
-	 *
-	 * @param $property
-	 * @return mixed
-	 * @throws \Exception
-	 */
-	public function __get( $property ) {
-		if ( 'posts_css_manager' === $property ) {
-			self::$instance->modules_manager->get_modules( 'dev-tools' )->deprecation->deprecated_argument( 'Plugin::$instance->posts_css_manager', '2.7.0', 'Plugin::$instance->files_manager' );
-
-			return $this->files_manager;
-		}
-
-		if ( property_exists( $this, $property ) ) {
-			throw new \Exception( 'Cannot access private property' );
-		}
-
-		return null;
 	}
 
 	/**
@@ -748,7 +661,6 @@ class Plugin {
 		$this->register_autoloader();
 
 		$this->logger = Log_Manager::instance();
-		$this->data_manager = Data_Manager::instance();
 
 		Maintenance::init();
 		Compatibility::register_actions();

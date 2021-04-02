@@ -1,6 +1,7 @@
 <?php
 namespace Elementor;
 
+use Elementor\Core\Files\Assets\Svg\Svg_Handler;
 use Elementor\Modules\DynamicTags\Module as TagsModule;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -80,7 +81,7 @@ class Control_Icons extends Control_Base_Multiple {
 					</div>
 					<div class="elementor-control-media-area elementor-fit-aspect-ratio">
 						<div class="elementor-control-media__remove elementor-control-media__content__remove" title="<?php echo __( 'Remove', 'elementor' ); ?>">
-							<i class="eicon-trash-o"></i>
+							<i class="eicon-trash"></i>
 						</div>
 						<div class="elementor-control-media__preview elementor-fit-aspect-ratio"></div>
 					</div>

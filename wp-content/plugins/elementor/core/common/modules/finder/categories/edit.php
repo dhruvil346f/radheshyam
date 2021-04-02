@@ -66,6 +66,9 @@ class Edit extends Base_Category {
 			'show_in_finder' => true,
 		] );
 
+		// TODO: Remove on 2.4.0.
+		unset( $document_types['widget'] );
+
 		$recently_edited_query_args = [
 			'post_type' => $post_types,
 			'post_status' => [ 'publish', 'draft', 'private', 'pending', 'future' ],
@@ -117,7 +120,7 @@ class Edit extends Base_Category {
 
 			$items[] = [
 				'icon' => $icon,
-				'title' => esc_html( $post->post_title ),
+				'title' => $post->post_title,
 				'description' => $description,
 				'url' => $document->get_edit_url(),
 				'actions' => [

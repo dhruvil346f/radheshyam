@@ -41,7 +41,7 @@ abstract class Files_Upload_Handler {
 		/**
 		 * Allow Unfiltered Files Upload.
 		 *
-		 * Determines whether to enable unfiltered file uploads.
+		 * Determines weather to enable unfiltered files upload.
 		 *
 		 * @since 3.0.0
 		 *
@@ -53,9 +53,7 @@ abstract class Files_Upload_Handler {
 	}
 
 	final public function support_unfiltered_files_upload( $existing_mimes ) {
-		if ( $this->is_elementor_media_upload() ) {
-			$existing_mimes[ $this->get_file_type() ] = $this->get_mime_type();
-		}
+		$existing_mimes[ $this->get_file_type() ] = $this->get_mime_type();
 
 		return $existing_mimes;
 	}

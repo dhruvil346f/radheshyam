@@ -78,27 +78,10 @@ class Theme extends Base {
 	 *
 	 * @since 1.0.0
 	 * @access protected
-	 * @deprecated 3.1.0
 	 *
 	 * @return \WP_Theme WordPress theme object.
 	 */
 	protected function _get_theme() {
-		Plugin::$instance->modules_manager->get_modules( 'dev-tools' )->deprecation->deprecated_function( __METHOD__, '3.1.0', __CLASS__ . '::get_theme()' );
-
-		return $this->get_theme();
-	}
-
-	/**
-	 * Get theme.
-	 *
-	 * Retrieve the theme.
-	 *
-	 * @since 3.1.0
-	 * @access private
-	 *
-	 * @return \WP_Theme WordPress theme object.
-	 */
-	private function get_theme() {
 		if ( is_null( $this->theme ) ) {
 			$this->theme = wp_get_theme();
 		}
@@ -116,7 +99,7 @@ class Theme extends Base {
 	 * @return \WP_Theme|false WordPress theme object, or false if the current theme is not a child theme.
 	 */
 	protected function get_parent_theme() {
-		return $this->get_theme()->parent();
+		return $this->_get_theme()->parent();
 	}
 
 	/**
@@ -135,7 +118,7 @@ class Theme extends Base {
 	 */
 	public function get_name() {
 		return [
-			'value' => $this->get_theme()->get( 'Name' ),
+			'value' => $this->_get_theme()->get( 'Name' ),
 		];
 	}
 
@@ -155,7 +138,7 @@ class Theme extends Base {
 	 */
 	public function get_author() {
 		return [
-			'value' => $this->get_theme()->get( 'Author' ),
+			'value' => $this->_get_theme()->get( 'Author' ),
 		];
 	}
 
@@ -175,7 +158,7 @@ class Theme extends Base {
 	 */
 	public function get_version() {
 		return [
-			'value' => $this->get_theme()->get( 'Version' ),
+			'value' => $this->_get_theme()->get( 'Version' ),
 		];
 	}
 
@@ -205,7 +188,7 @@ class Theme extends Base {
 			$result['recommendation'] = sprintf(
 				/* translators: %s: Codex URL */
 				_x( 'If you want to modify the source code of your theme, we recommend using a <a href="%s">child theme</a>.', 'System Info', 'elementor' ),
-				'https://go.elementor.com/wordpress-child-themes/'
+				'https://codex.wordpress.org/Child_Themes'
 			);
 		}
 

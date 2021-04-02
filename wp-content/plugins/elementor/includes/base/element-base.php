@@ -450,9 +450,7 @@ abstract class Element_Base extends Controls_Stack {
 		$attributes = [];
 
 		if ( ! empty( $url_control['url'] ) ) {
-			$allowed_protocols = array_merge( wp_allowed_protocols(), [ 'skype', 'viber' ] );
-
-			$attributes['href'] = esc_url( $url_control['url'], $allowed_protocols );
+			$attributes['href'] = str_replace( 'javascript:', '', $url_control['url'] );
 		}
 
 		if ( ! empty( $url_control['is_external'] ) ) {
@@ -465,7 +463,33 @@ abstract class Element_Base extends Controls_Stack {
 
 		if ( ! empty( $url_control['custom_attributes'] ) ) {
 			// Custom URL attributes should come as a string of comma-delimited key|value pairs
-			$attributes = array_merge( $attributes, Utils::parse_custom_attributes( $url_control['custom_attributes'] ) );
+			$custom_attributes = explode( ',', $url_control['custom_attributes'] );
+			$blacklist = [ 'href', 'onclick', 'onfocus', 'onblur', 'onchange', 'onresize', 'onmouseover', 'onmouseout', 'onkeydown', 'onkeyup', 'onload', 'onerror', 'onanimationend', 'onanimationstart' ];
+
+			foreach ( $custom_attributes as $attribute ) {
+				// Trim in case users inserted unwanted spaces
+				$attr_key_value = explode( '|', $attribute );
+
+				$attr_key = $attr_key_value[0];
+
+				// Cover cases where key/value have spaces both before and/or after the actual value
+				preg_match( '/[^=]+/', $attr_key, $attr_key_matches );
+
+				$attr_key = trim( $attr_key_matches[0] );
+
+				// Implement attribute blacklist
+				if ( in_array( strtolower( $attr_key ), $blacklist, true ) ) {
+					continue;
+				}
+
+				if ( isset( $attr_key_value[1] ) ) {
+					$attr_value = trim( $attr_key_value[1] );
+				} else {
+					$attr_value = '';
+				}
+
+				$attributes[ $attr_key ] = $attr_value;
+			}
 		}
 
 		if ( $attributes ) {
@@ -641,15 +665,7 @@ abstract class Element_Base extends Controls_Stack {
 		do_action( "elementor/frontend/{$element_type}/before_render", $this );
 
 		ob_start();
-
-		if ( $this->has_own_method( '_print_content', self::class ) ) {
-			Plugin::$instance->modules_manager->get_modules( 'dev-tools' )->deprecation->deprecated_function( '_print_content', '3.1.0', __CLASS__ . '::print_content()' );
-
-			$this->_print_content();
-		} else {
-			$this->print_content();
-		}
-
+		$this->_print_content();
 		$content = ob_get_clean();
 
 		$should_render = ( ! empty( $content ) || $this->should_print_empty() );
@@ -667,13 +683,7 @@ abstract class Element_Base extends Controls_Stack {
 		$should_render = apply_filters( "elementor/frontend/{$element_type}/should_render", $should_render, $this );
 
 		if ( $should_render ) {
-			if ( $this->has_own_method( '_add_render_attributes', self::class ) ) {
-				Plugin::$instance->modules_manager->get_modules( 'dev-tools' )->deprecation->deprecated_function( '_add_render_attributes', '3.1.0', __CLASS__ . '::add_render_attributes()' );
-
-				$this->_add_render_attributes();
-			} else {
-				$this->add_render_attributes();
-			}
+			$this->_add_render_attributes();
 
 			$this->before_render();
 			echo $content;
@@ -782,23 +792,8 @@ abstract class Element_Base extends Controls_Stack {
 	 *
 	 * @since 1.3.0
 	 * @access protected
-	 * @deprecated 3.1.0
 	 */
 	protected function _add_render_attributes() {
-		Plugin::$instance->modules_manager->get_modules( 'dev-tools' )->deprecation->deprecated_function( __METHOD__, '3.1.0', __CLASS__ . '::add_render_attributes()' );
-
-		return $this->add_render_attributes();
-	}
-
-	/**
-	 * Add render attributes.
-	 *
-	 * Used to add attributes to the current element wrapper HTML tag.
-	 *
-	 * @since 3.1.0
-	 * @access protected
-	 */
-	protected function add_render_attributes() {
 		$id = $this->get_id();
 
 		$settings = $this->get_settings_for_display();
@@ -830,17 +825,9 @@ abstract class Element_Base extends Controls_Stack {
 			$this->add_render_attribute( '_wrapper', 'class', $controls[ $setting_key ]['prefix_class'] . $setting );
 		}
 
-		$_animation = ! empty( $settings['_animation'] );
-		$animation = ! empty( $settings['animation'] );
-		$has_animation = $_animation && 'none' !== $settings['_animation'] || $animation && 'none' !== $settings['animation'];
-
-		if ( $has_animation ) {
-			$is_static_render_mode = Plugin::$instance->frontend->is_static_render_mode();
-
-			if ( ! $is_static_render_mode ) {
-				// Hide the element until the animation begins
-				$this->add_render_attribute( '_wrapper', 'class', 'elementor-invisible' );
-			}
+		if ( ! empty( $settings['animation'] ) || ! empty( $settings['_animation'] ) ) {
+			// Hide the element until the animation begins
+			$this->add_render_attribute( '_wrapper', 'class', 'elementor-invisible' );
 		}
 
 		if ( ! empty( $settings['_element_id'] ) ) {
@@ -893,20 +880,6 @@ abstract class Element_Base extends Controls_Stack {
 	 * @access protected
 	 */
 	protected function _print_content() {
-		Plugin::$instance->modules_manager->get_modules( 'dev-tools' )->deprecation->deprecated_function( __METHOD__, '3.1.0', __CLASS__ . '::print_content()' );
-
-		$this->print_content();
-	}
-
-	/**
-	 * Print element content.
-	 *
-	 * Output the element final HTML on the frontend.
-	 *
-	 * @since 3.1.0
-	 * @access protected
-	 */
-	protected function print_content() {
 		foreach ( $this->get_children() as $child ) {
 			$child->print_element();
 		}

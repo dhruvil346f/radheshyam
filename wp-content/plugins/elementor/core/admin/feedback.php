@@ -3,8 +3,8 @@ namespace Elementor\Core\Admin;
 
 use Elementor\Api;
 use Elementor\Core\Base\Module;
-use Elementor\Plugin;
 use Elementor\Tracker;
+use Elementor\User;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -23,6 +23,8 @@ class Feedback extends Module {
 			}
 
 			add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_feedback_dialog_scripts' ] );
+
+			add_filter( 'elementor/admin/localize_settings', [ $this, 'localize_feedback_dialog_settings' ] );
 		} );
 
 		// Ajax.
@@ -71,14 +73,14 @@ class Feedback extends Module {
 
 	/**
 	 * @since 2.3.0
-	 * @deprecated 3.1.0
+	 * @access public
 	 */
-	public function localize_feedback_dialog_settings() {
-		Plugin::$instance->modules_manager->get_modules( 'dev-tools' )->deprecation->deprecated_function( __METHOD__, '3.1.0' );
+	public function localize_feedback_dialog_settings( $localized_settings ) {
+		$localized_settings['i18n']['submit_n_deactivate'] = __( 'Submit & Deactivate', 'elementor' );
+		$localized_settings['i18n']['skip_n_deactivate'] = __( 'Skip & Deactivate', 'elementor' );
 
-		return [];
+		return $localized_settings;
 	}
-
 
 	/**
 	 * Print deactivate feedback dialog.

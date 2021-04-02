@@ -2,7 +2,6 @@
 namespace Elementor\Core;
 
 use Elementor\Core\Base\Module;
-use Elementor\Plugin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -49,17 +48,6 @@ class Modules_Manager {
 			$class_name = $modules_namespace_prefix . '\\Modules\\' . $class_name . '\Module';
 
 			/** @var Module $class_name */
-
-			$experimental_data = $class_name::get_experimental_data();
-
-			if ( $experimental_data ) {
-				Plugin::$instance->experiments->add_feature( $experimental_data );
-
-				if ( ! Plugin::$instance->experiments->is_feature_active( $experimental_data['name'] ) ) {
-					continue;
-				}
-			}
-
 			if ( $class_name::is_active() ) {
 				$this->modules[ $module_name ] = $class_name::instance();
 			}
@@ -78,7 +66,6 @@ class Modules_Manager {
 	 */
 	public function get_modules_names() {
 		return [
-			'admin-bar',
 			'history',
 			'library',
 			'dynamic-tags',
@@ -87,9 +74,6 @@ class Modules_Manager {
 			'wp-cli',
 			'safe-mode',
 			'usage',
-			'dev-tools',
-			'landing-pages',
-			'compatibility-tag',
 		];
 	}
 

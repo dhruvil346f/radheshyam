@@ -1667,7 +1667,7 @@ function do_favicon() {
 	 */
 	do_action( 'do_faviconico' );
 
-	wp_redirect( get_site_icon_url( 32, admin_url( 'images/w-logo-blue.png' ) ) );
+	wp_redirect( get_site_icon_url( 32, includes_url( 'images/w-logo-blue-white-bg.png' ) ) );
 	exit;
 }
 
@@ -1742,7 +1742,11 @@ function is_blog_installed() {
 			continue;
 		}
 
-		if ( ! $wpdb->get_results( "DESCRIBE $table;" ) ) {
+		$described_table = $wpdb->get_results( "DESCRIBE $table;" );
+		if (
+			( ! $described_table && empty( $wpdb->last_error ) ) ||
+			( is_array( $described_table ) && 0 === count( $described_table ) )
+		) {
 			continue;
 		}
 

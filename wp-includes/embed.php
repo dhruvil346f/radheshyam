@@ -614,6 +614,11 @@ function get_oembed_response_data_for_url( $url, $args ) {
 		$sites = get_sites( $qv );
 		$site  = reset( $sites );
 
+		// Do not allow embeds for deleted/archived/spam sites.
+		if ( ! empty( $site->deleted ) || ! empty( $site->spam ) || ! empty( $site->archived ) ) {
+			return false;
+		}
+
 		if ( $site && get_current_blog_id() !== (int) $site->blog_id ) {
 			switch_to_blog( $site->blog_id );
 			$switched_blog = true;
@@ -807,11 +812,24 @@ function wp_filter_oembed_iframe_title_attribute( $result, $data, $url ) {
 
 	$title = ! empty( $data->title ) ? $data->title : '';
 
-	$pattern        = '`<iframe[^>]*?title=(\\\\\'|\\\\"|[\'"])([^>]*?)\1`i';
-	$has_title_attr = preg_match( $pattern, $result, $matches );
+	$pattern = '`<iframe([^>]*)>`i';
+	if ( preg_match( $pattern, $result, $matches ) ) {
+		$attrs = wp_kses_hair( $matches[1], wp_allowed_protocols() );
 
-	if ( $has_title_attr && ! empty( $matches[2] ) ) {
-		$title = $matches[2];
+		foreach ( $attrs as $attr => $item ) {
+			$lower_attr = strtolower( $attr );
+			if ( $lower_attr === $attr ) {
+				continue;
+			}
+			if ( ! isset( $attrs[ $lower_attr ] ) ) {
+				$attrs[ $lower_attr ] = $item;
+				unset( $attrs[ $attr ] );
+			}
+		}
+	}
+
+	if ( ! empty( $attrs['title']['value'] ) ) {
+		$title = $attrs['title']['value'];
 	}
 
 	/**
@@ -830,11 +848,11 @@ function wp_filter_oembed_iframe_title_attribute( $result, $data, $url ) {
 		return $result;
 	}
 
-	if ( $has_title_attr ) {
-		// Remove the old title, $matches[1]: quote, $matches[2]: title attribute value.
-		$result = str_replace( ' title=' . $matches[1] . $matches[2] . $matches[1], '', $result );
+	if ( isset( $attrs['title'] ) ) {
+		unset( $attrs['title'] );
+		$attr_string = join( ' ', wp_list_pluck( $attrs, 'whole' ) );
+		$result      = str_replace( $matches[0], '<iframe ' . trim( $attr_string ) . '>', $result );
 	}
-
 	return str_ireplace( '<iframe ', sprintf( '<iframe title="%s" ', esc_attr( $title ) ), $result );
 }
 
@@ -1184,8 +1202,8 @@ function the_embed_site_title() {
 	$site_title = sprintf(
 		'<a href="%s" target="_top"><img src="%s" srcset="%s 2x" width="32" height="32" alt="" class="wp-embed-site-icon"/><span>%s</span></a>',
 		esc_url( home_url() ),
-		esc_url( get_site_icon_url( 32, admin_url( 'images/w-logo-blue.png' ) ) ),
-		esc_url( get_site_icon_url( 64, admin_url( 'images/w-logo-blue.png' ) ) ),
+		esc_url( get_site_icon_url( 32, includes_url( 'images/w-logo-blue.png' ) ) ),
+		esc_url( get_site_icon_url( 64, includes_url( 'images/w-logo-blue.png' ) ) ),
 		esc_html( get_bloginfo( 'name' ) )
 	);
 

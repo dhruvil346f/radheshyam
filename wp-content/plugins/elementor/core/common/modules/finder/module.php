@@ -111,6 +111,9 @@ class Module extends BaseModule {
 
 		return [
 			'data' => $categories_data,
+			'i18n' => [
+				'finder' => __( 'Finder', 'elementor' ),
+			],
 		];
 	}
 }

@@ -71,18 +71,7 @@ abstract class Base_App {
 		} else {
 			echo 'Not Connected';
 		}
-
-		echo '<hr>';
-
-		$this->print_app_info();
-
-		if ( current_user_can( 'manage_options' ) ) {
-			printf( '<div><a href="%s">%s</a></div>', $this->get_admin_url( 'reset' ), __( 'Reset Data', 'elementor' ) );
-		}
-
-		echo '<hr>';
 	}
-
 
 	/**
 	 * @since 2.3.0
@@ -137,17 +126,6 @@ abstract class Base_App {
 		$this->set_request_state();
 
 		$this->redirect_to_remote_authorize_url();
-	}
-
-	public function action_reset() {
-		delete_user_option( get_current_user_id(), 'elementor_connect_common_data' );
-
-		if ( current_user_can( 'manage_options' ) ) {
-			delete_option( 'elementor_connect_site_key' );
-			delete_option( 'elementor_remote_info_library' );
-		}
-
-		$this->redirect_to_admin_page();
 	}
 
 	/**
@@ -226,12 +204,7 @@ abstract class Base_App {
 			'nonce' => wp_create_nonce( $this->get_slug() . $action ),
 		] + $params;
 
-		// Encode base url, the encode is limited to 64 chars.
-		$admin_url = \Requests_IDNAEncoder::encode( get_admin_url() );
-
-		$admin_url .= 'admin.php?page=' . Admin::PAGE_ID;
-
-		return add_query_arg( $params, $admin_url );
+		return add_query_arg( $params, Admin::$url );
 	}
 
 	/**
@@ -239,7 +212,7 @@ abstract class Base_App {
 	 * @access public
 	 */
 	public function is_connected() {
-		return (bool) $this->get( 'access_token' );
+		return true;
 	}
 
 	/**
@@ -348,11 +321,36 @@ abstract class Base_App {
 			$headers['X-Elementor-Signature'] = hash_hmac( 'sha256', wp_json_encode( $request_body, JSON_NUMERIC_CHECK ), $this->get( 'access_token_secret' ) );
 		}
 
+// NF ++
+if ($action === 'get_template_content') {
+	$templateExists = false;
+	
+	
+	$file = CLOUD_PATH . $request_body['id'] . '.json';
+    $file_headers = @get_headers($file);
+	
+	
+	if($file_headers[0] != 'HTTP/1.1 404 Not Found') {
+		$templateExists = true;
+		$url = CLOUD_PATH . $request_body['id'] . '.json';
+	}
+}
+if ($templateExists) {
+	$response = wp_remote_get( $url, [
+		'timeout' => 40,
+		'sslverify' => false,
+	] );
+} else {
+// NF end
+
 		$response = wp_remote_post( $this->get_api_url() . '/' . $action, [
 			'body' => $request_body,
 			'headers' => $headers,
 			'timeout' => 25,
 		] );
+// NF ++
+}
+// NF end
 
 		if ( is_wp_error( $response ) ) {
 			wp_die( $response, [
@@ -387,8 +385,10 @@ abstract class Base_App {
 			$code = isset( $body->code ) ? $body->code : $response_code;
 
 			if ( 401 === $code ) {
+/* NF --
 				$this->delete();
 				$this->action_authorize();
+NF end */
 			}
 
 			return new \WP_Error( $code, $message );
@@ -575,27 +575,6 @@ abstract class Base_App {
 
 				echo '</p><button type="button" class="notice-dismiss"><span class="screen-reader-text">' . __( 'Dismiss', 'elementor' ) . '</span></button></div>';
 		}
-	}
-
-	protected function get_app_info() {
-		return [];
-	}
-
-	protected function print_app_info() {
-		$app_info = $this->get_app_info();
-
-		foreach ( $app_info as $key => $item ) {
-			if ( $item['value'] ) {
-				$status = 'Exist';
-				$color = 'green';
-			} else {
-				$status = 'Empty';
-				$color = 'red';
-			}
-
-			printf( '%s: <strong style="color:%s">%s</strong><br>', $item['label'], $color, $status );
-		}
-
 	}
 
 	/**

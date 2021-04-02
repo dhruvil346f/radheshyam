@@ -35,15 +35,15 @@ class Model extends BaseModel {
 	 */
 	public function get_panel_page_settings() {
 		return [
-			'title' => __( 'User Preferences', 'elementor' ),
+			'title' => __( 'Editor Preferences', 'elementor' ),
 		];
 	}
 
 	/**
-	 * @since 3.1.0
+	 * @since 2.8.0
 	 * @access protected
 	 */
-	protected function register_controls() {
+	protected function _register_controls() {
 		$this->start_controls_section( 'preferences', [
 			'tab' => Controls_Manager::TAB_SETTINGS,
 			'label' => __( 'Preferences', 'elementor' ),
@@ -60,23 +60,6 @@ class Model extends BaseModel {
 					'auto' => __( 'Auto Detect', 'elementor' ),
 					'light' => __( 'Light', 'elementor' ),
 					'dark' => __( 'Dark', 'elementor' ),
-				],
-			]
-		);
-
-		$this->add_control(
-			'panel_width',
-			[
-				'label' => __( 'Panel Width', 'elementor' ),
-				'type' => Controls_Manager::SLIDER,
-				'range' => [
-					'px' => [
-						'min' => 200,
-						'max' => 680,
-					],
-				],
-				'default' => [
-					'size' => 300,
 				],
 			]
 		);

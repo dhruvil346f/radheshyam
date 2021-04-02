@@ -88,7 +88,7 @@ class Widget_WordPress extends Widget_Base {
 		if ( $this->is_pojo_widget() ) {
 			$category = 'pojo';
 		} else {
-			$category = 'wordpress';
+			$category = 'wordpress'; // WPCS: spelling ok.
 		}
 		return [ $category ];
 	}
@@ -219,10 +219,10 @@ class Widget_WordPress extends Widget_Base {
 	 *
 	 * Adds different input fields to allow the user to change and customize the widget settings.
 	 *
-	 * @since 3.1.0
+	 * @since 1.0.0
 	 * @access protected
 	 */
-	protected function register_controls() {
+	protected function _register_controls() {
 		$this->add_control(
 			'wp',
 			[

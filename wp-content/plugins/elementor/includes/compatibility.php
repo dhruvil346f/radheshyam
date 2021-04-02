@@ -62,9 +62,11 @@ class Compatibility {
 			return;
 		}
 
-		$replacement = "`elementor/element/wp-post/{$section_id}/{$current_sub_action}` or `elementor/element/wp-page/{$section_id}/{$current_sub_action}`";
+		// TODO: Hard deprecation on 3.1.0.
+		// $replacement = "`elementor/element/wp-post/{$section_id}/{$current_sub_action}` or `elementor/element/wp-page/{$section_id}/{$current_sub_action}`";
+		// _deprecated_hook( $deprecated_action, '2.7.0', $replacement );
 
-		Plugin::$instance->modules_manager->get_modules( 'dev-tools' )->deprecation->do_deprecated_action( $deprecated_action, func_get_args(), '2.7.0', $replacement );
+		do_action( $deprecated_action, $instance, $section_id, $args );
 	}
 
 	public static function clear_3rd_party_cache() {
@@ -331,39 +333,14 @@ class Compatibility {
 	 * @return array Updated post meta.
 	 */
 	public static function on_wp_import_post_meta( $post_meta ) {
-		$is_wp_importer_before_0_7 = self::is_wp_importer_before_0_7();
-
-		if ( $is_wp_importer_before_0_7 ) {
-			foreach ( $post_meta as &$meta ) {
-				if ( '_elementor_data' === $meta['key'] ) {
-					$meta['value'] = wp_slash( $meta['value'] );
-					break;
-				}
+		foreach ( $post_meta as &$meta ) {
+			if ( '_elementor_data' === $meta['key'] ) {
+				$meta['value'] = wp_slash( $meta['value'] );
+				break;
 			}
 		}
 
 		return $post_meta;
-	}
-
-	/**
-	 * Is WP Importer Before 0.7
-	 *
-	 * Checks if WP Importer is installed, and whether its version is older than 0.7.
-	 *
-	 * @return bool
-	 */
-	public static function is_wp_importer_before_0_7() {
-		$wp_importer = get_plugins( '/wordpress-importer' );
-
-		if ( ! empty( $wp_importer ) ) {
-			$wp_importer_version = $wp_importer['wordpress-importer.php']['Version'];
-
-			if ( version_compare( $wp_importer_version, '0.7', '<' ) ) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	/**
@@ -383,12 +360,8 @@ class Compatibility {
 	 * @return array Updated post meta.
 	 */
 	public static function on_wxr_importer_pre_process_post_meta( $post_meta ) {
-		$is_wp_importer_before_0_7 = self::is_wp_importer_before_0_7();
-
-		if ( $is_wp_importer_before_0_7 ) {
-			if ( '_elementor_data' === $post_meta['key'] ) {
-				$post_meta['value'] = wp_slash( $post_meta['value'] );
-			}
+		if ( '_elementor_data' === $post_meta['key'] ) {
+			$post_meta['value'] = wp_slash( $post_meta['value'] );
 		}
 
 		return $post_meta;

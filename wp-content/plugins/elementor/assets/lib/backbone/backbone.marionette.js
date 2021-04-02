@@ -1,9 +1,7 @@
-/*! elementor - v3.0.15 - 2020-12-20 */
+/*! elementor - v0.7.1 - 18-08-2016 */
 // MarionetteJS (Backbone.Marionette)
 // ----------------------------------
-// v2.4.5.e1
-// Change Log:
-// 	e1: Fix - Compatibility with jQuery 3. (`Marionette.Region.reset`).
+// v2.4.5
 //
 // Copyright (c)2016 Derick Bailey, Muted Solutions, LLC.
 // Distributed under MIT license
@@ -1351,8 +1349,7 @@
       this.empty();
   
       if (this.$el) {
-      	// 2020-12-20 Changed for compatibility with jQuery 3.
-        this.el = this.options.el;
+        this.el = this.$el.selector;
       }
   
       delete this.$el;

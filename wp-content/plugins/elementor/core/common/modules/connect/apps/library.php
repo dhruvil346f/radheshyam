@@ -54,6 +54,12 @@ class Library extends Common_App {
 		$is_connected = $this->is_connected();
 
 		return array_replace_recursive( $settings, [
+			'i18n' => [
+				// Route: library/connect
+				'library/connect:title' => __( 'Connect to Template Library', 'elementor' ),
+				'library/connect:message' => __( 'Access this template and our entire library by creating a free personal account', 'elementor' ),
+				'library/connect:button' => __( 'Get Started', 'elementor' ),
+			],
 			'library_connect' => [
 				'is_connected' => $is_connected,
 			],
@@ -71,23 +77,6 @@ class Library extends Common_App {
 	 */
 	public function register_ajax_actions( $ajax_manager ) {
 		$ajax_manager->register_ajax_action( 'library_connect_popup_seen', [ $this, 'library_connect_popup_seen' ] );
-	}
-
-	protected function get_app_info() {
-		return [
-			'user_common_data' => [
-				'label' => 'User Common Data',
-				'value' => get_user_option( $this->get_option_name(), get_current_user_id() ),
-			],
-			'connect_site_key' => [
-				'label' => 'Site Key',
-				'value' => get_option( 'elementor_connect_site_key' ),
-			],
-			'remote_info_library' => [
-				'label' => 'Remote Library Info',
-				'value' => get_option( 'elementor_remote_info_library' ),
-			],
-		];
 	}
 
 	protected function init() {

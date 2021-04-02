@@ -336,7 +336,7 @@ class Controls_Manager {
 	 * @param string $tab_name  Tab name.
 	 * @param string $tab_label Tab label.
 	 */
-	public static function add_tab( $tab_name, $tab_label = '' ) {
+	public static function add_tab( $tab_name, $tab_label ) {
 		if ( ! self::$tabs ) {
 			self::init_tabs();
 		}
@@ -420,7 +420,7 @@ class Controls_Manager {
 	 * External developers can register new controls by hooking to the
 	 * `elementor/controls/controls_registered` action.
 	 *
-	 * @since 3.1.0
+	 * @since 1.0.0
 	 * @access private
 	 */
 	private function register_controls() {

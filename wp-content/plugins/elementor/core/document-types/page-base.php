@@ -5,6 +5,8 @@ use Elementor\Controls_Manager;
 use Elementor\Core\Base\Document;
 use Elementor\Group_Control_Background;
 use Elementor\Plugin;
+use Elementor\Settings;
+use Elementor\Core\Settings\Manager as SettingsManager;
 use Elementor\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -54,11 +56,11 @@ abstract class PageBase extends Document {
 	}
 
 	/**
-	 * @since 3.1.0
+	 * @since 2.0.0
 	 * @access protected
 	 */
-	protected function register_controls() {
-		parent::register_controls();
+	protected function _register_controls() {
+		parent::_register_controls();
 
 		self::register_hide_title_control( $this );
 
@@ -74,6 +76,14 @@ abstract class PageBase extends Document {
 	 * @param Document $document
 	 */
 	public static function register_hide_title_control( $document ) {
+		$page_title_selector = SettingsManager::get_settings_managers( 'general' )->get_model()->get_settings( 'elementor_page_title_selector' );
+
+		if ( ! $page_title_selector ) {
+			$page_title_selector = 'h1.entry-title';
+		}
+
+		$page_title_selector .= ', .elementor-page-title';
+
 		$document->start_injection( [
 			'of' => 'post_status',
 			'fallback' => [
@@ -86,9 +96,13 @@ abstract class PageBase extends Document {
 			[
 				'label' => __( 'Hide Title', 'elementor' ),
 				'type' => Controls_Manager::SWITCHER,
-				'description' => __( 'Not working? You can set a different selector for the title in Site Settings > Layout', 'elementor' ),
+				'description' => sprintf(
+					/* translators: %s: Setting page link */
+					__( 'Not working? You can set a different selector for the title in the <a href="%s" target="_blank">Settings page</a>.', 'elementor' ),
+					Settings::get_url() . '#tab-style'
+				),
 				'selectors' => [
-					':root' => '--page-title-display: none',
+					'{{WRAPPER}} ' . $page_title_selector => 'display: none',
 				],
 			]
 		);
